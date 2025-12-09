@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Xem file {{ filename }}</title>
+</head>
+<body>
+  <h2>Xem ảnh: {{ filename }}</h2>
+  <canvas id="canvas" width="{{ width }}" height="{{ height }}" style="border:1px solid black;"></canvas>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+
+  fetch("/static/{{ filename }}")
+    .then(response => response.arrayBuffer())
+    .then(buffer => {
+      const data = new Uint16Array(buffer);
+      const imgData = ctx.createImageData(width, height);
+      let i = 0;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const pixel = data[i++];
+          const r = ((pixel >> 11) & 0x1F) << 3;
+          const g = ((pixel >> 5) & 0x3F) << 2;
+          const b = (pixel & 0x1F) << 3;
+          const index = (y * width + x) * 4;
+          imgData.data[index + 0] = r;
+          imgData.data[index + 1] = g;
+          imgData.data[index + 2] = b;
+          imgData.data[index + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    });
+</script>
+
+</body>
+</html>
